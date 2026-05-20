@@ -1,0 +1,7 @@
+{
+  "name": "MaxBank",
+  "description": "Simulador centralizado de recebimento PIX via QR Code (PWA) para LogMax ERP, LogMax Contabilidade e LogMax Aprendiz.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
