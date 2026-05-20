@@ -1,0 +1,30 @@
+{
+  "name": "maxbank",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Simulador centralizado de pagamento PIX (PWA) para LogMax ERP, LogMax Contabilidade e LogMax Aprendiz.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port=3000 --host=0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --port=3000 --host=0.0.0.0",
+    "clean": "node -e \"const fs=require('fs');for(const p of ['dist','server.js']){try{fs.rmSync(p,{recursive:true,force:true});}catch{}}\"",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.0",
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^0.546.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "tailwindcss": "^4.1.14",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3"
+  }
+}
