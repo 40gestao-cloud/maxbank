@@ -1,4 +1,4 @@
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { useEffect, useRef, useState } from 'react';
 
 interface QrScannerProps {
@@ -6,11 +6,11 @@ interface QrScannerProps {
   onScanError?: (errorMessage: string) => void;
 }
 
-const qrcodeRegionId = "html5qr-code-full-region";
+const REGION_ID = 'maxbank-qr-region';
 
 export function QrScanner({ onScanSuccess, onScanError }: QrScannerProps) {
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(true);
   const successRef = useRef(onScanSuccess);
   const errorRef = useRef(onScanError);
 
@@ -20,59 +20,90 @@ export function QrScanner({ onScanSuccess, onScanError }: QrScannerProps) {
   }, [onScanSuccess, onScanError]);
 
   useEffect(() => {
-    // Prevent multiple initializations in React 18 strict mode
-    if (!scannerRef.current) {
-        scannerRef.current = new Html5QrcodeScanner(
-            qrcodeRegionId,
-            {
-               fps: 10,
-               qrbox: { width: 250, height: 250 },
-               aspectRatio: 1.0,
-            },
-            false // verbose = false
-        );
+    const instance = new Html5Qrcode(REGION_ID, { verbose: false } as any);
+    let cancelled = false;
 
-        scannerRef.current.render(
-          (decodedText) => {
-            if (successRef.current) successRef.current(decodedText);
-          }, 
-          (error) => {
-            const errString = typeof error === 'string' ? error : (error?.message || error?.toString() || '');
-            
-            // Ignore normal "no qr code found" exceptions that fire every frame
-            if (errString.includes('NotFoundException')) {
-                return;
-            }
-            
-            // It's a real camera or permission error
-            setCameraError("Não foi possível acessar a câmera. Verifique as permissões de acesso.");
-            
-            if (errorRef.current) {
-                errorRef.current(errString);
-            }
-        });
-    }
+    const onDecode = (decodedText: string) => {
+      successRef.current?.(decodedText);
+    };
+
+    const onFrameError = (err: string) => {
+      // "NotFoundException" dispara a cada frame sem QR — ignora ruído
+      if (typeof err === 'string' && err.includes('NotFoundException')) return;
+      errorRef.current?.(err);
+    };
+
+    const config = {
+      fps: 10,
+      qrbox: (vw: number, vh: number) => {
+        const side = Math.floor(Math.min(vw, vh) * 0.7);
+        return { width: side, height: side };
+      },
+      aspectRatio: 1,
+    };
+
+    (async () => {
+      try {
+        // Tenta câmera traseira de forma estrita; cai para "environment" não-exato
+        // em desktops/celulares com apenas uma câmera.
+        try {
+          await instance.start({ facingMode: { exact: 'environment' } }, config, onDecode, onFrameError);
+        } catch {
+          await instance.start({ facingMode: 'environment' }, config, onDecode, onFrameError);
+        }
+
+        if (cancelled) {
+          await instance.stop().catch(() => {});
+          return;
+        }
+        setIsStarting(false);
+      } catch (err: any) {
+        if (cancelled) return;
+        const msg = String(err?.message || err || '');
+        setCameraError(
+          /Permission|NotAllowed|denied/i.test(msg)
+            ? 'Permissão de câmera negada. Habilite o acesso nas configurações do navegador e tente novamente.'
+            : /NotFound|no camera/i.test(msg)
+            ? 'Nenhuma câmera encontrada neste dispositivo.'
+            : 'Não foi possível abrir a câmera. Verifique se outro aplicativo a está usando.',
+        );
+        setIsStarting(false);
+      }
+    })();
 
     return () => {
-        if (scannerRef.current) {
-            scannerRef.current.clear().catch(error => {
-                console.error("Failed to clear html5QrcodeScanner. ", error);
-            });
-            scannerRef.current = null;
-        }
+      cancelled = true;
+      if (instance.isScanning) {
+        instance
+          .stop()
+          .catch(() => {})
+          .finally(() => {
+            try { instance.clear(); } catch { /* noop */ }
+          });
+      } else {
+        try { instance.clear(); } catch { /* noop */ }
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className="w-full max-w-md mx-auto relative flex flex-col items-center">
-      {cameraError && (
-        <div className="bg-red-50 text-red-600 p-3 mb-3 rounded-lg text-sm border border-red-200 text-center w-full font-medium shadow-sm">
-          {cameraError}
+    <div className="w-full h-full relative">
+      <div id={REGION_ID} className="w-full h-full" />
+
+      {isStarting && !cameraError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-20 bg-black/30 backdrop-blur-sm">
+          <div className="w-10 h-10 rounded-full border-2 border-[#f8d117] border-t-transparent animate-spin"></div>
+          <p className="mt-3 text-xs font-medium tracking-wide">Abrindo câmera…</p>
         </div>
       )}
-      <div id={qrcodeRegionId} className="w-full overflow-hidden h-full rounded-2xl bg-transparent" />
+
+      {cameraError && (
+        <div className="absolute inset-0 flex items-center justify-center p-5 bg-black/75 z-20">
+          <p className="bg-white text-red-600 p-4 rounded-2xl text-sm text-center font-medium shadow-lg leading-relaxed max-w-xs">
+            {cameraError}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
-
