@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Landmark, Camera, Check, FileText, Loader2, ScanLine, XCircle, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Check, FileText, Loader2, ScanLine, CheckCircle2, AlertCircle, RefreshCw, QrCode } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { QrScanner } from './components/QrScanner';
 import { getSupabaseClient, branches } from './lib/supabase';
@@ -227,10 +227,10 @@ export default function App() {
         <main className="flex-1 flex flex-col px-5 -mt-4 relative z-20 pb-8">
           
           {appState === 'home' && (
-            <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              
+            <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-2">
+
               {/* Card de Seleção de Filial */}
-              <div className="bg-[#ecf0f3] p-6 rounded-[2rem] shadow-[8px_8px_16px_#d1d9e6] mt-2">
+              <div className="bg-[#ecf0f3] p-6 rounded-[2rem] shadow-[8px_8px_16px_#d1d9e6]">
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-2">
                   Filial de Recebimento
                 </label>
@@ -251,30 +251,15 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Área do Leitor (Home) */}
-              <div className="bg-[#ecf0f3] p-8 rounded-[2rem] shadow-[8px_8px_16px_#d1d9e6] flex flex-col items-center gap-6 mt-2 transition-all">
-                
-                <div className="text-center mb-1">
-                  <h2 className="text-2xl font-black text-[#003da5] tracking-tight uppercase">Bem-vindo</h2>
-                  <p className="text-gray-500 text-sm mt-3 relative z-10 px-2">Selecione sua filial e escaneie o QR Code do cliente para processar.</p>
-                </div>
-
-                <div className="w-full aspect-[4/3] bg-[#ecf0f3] rounded-3xl shadow-[inset_6px_6px_12px_#d1d9e6] flex flex-col items-center justify-center text-gray-400 gap-4 p-5">
-                  <div className="p-5 bg-[#ecf0f3] rounded-full shadow-[5px_5px_10px_#d1d9e6]">
-                    <Camera className="w-8 h-8 text-[#003da5]" />
-                  </div>
-                  <span className="text-sm font-medium px-4 text-center relative z-10">Posicione o código no centro da câmera na próxima tela</span>
-                </div>
-
-                <button
-                  onClick={startScanning}
-                  disabled={!selectedBranchId}
-                  className="w-full bg-[#f8d117] text-[#003da5] font-bold py-4 px-4 rounded-2xl shadow-[6px_6px_12px_#d1d9e6] flex items-center justify-center gap-2 active:shadow-[inset_4px_4px_8px_#d3b213,inset_-4px_-4px_8px_#ffff1b] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none uppercase tracking-wide mt-2 shimmer-btn"
-                >
-                  <Camera className="w-5 h-5" />
-                  Iniciar Leitura
-                </button>
-              </div>
+              {/* Botão principal — Ler QR Code (Amarelo BB) */}
+              <button
+                onClick={startScanning}
+                disabled={!selectedBranchId}
+                className="w-full bg-[#f8d117] text-[#003da5] font-black text-base py-5 px-4 rounded-2xl shadow-[6px_6px_12px_#d1d9e6] flex items-center justify-center gap-3 active:shadow-[inset_4px_4px_8px_#d3b213,inset_-4px_-4px_8px_#ffff1b] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none uppercase tracking-wider shimmer-btn"
+              >
+                <QrCode className="w-6 h-6" />
+                Ler QR Code
+              </button>
 
             </div>
           )}
@@ -305,26 +290,11 @@ export default function App() {
                </div>
                
                <p className="text-xs text-center text-gray-500 font-medium px-4">
-                 Aponte para o QR Code gerado pelo ERP.
+                 Aponte para o QR Code do cliente — filial <strong className="text-[#003da5]">{branches.find(b => b.id === selectedBranchId)?.name}</strong>.
                </p>
-               
-               {/* Simulação Fallback */}
-               <div className="w-full relative mt-3 pt-6 border-t border-[#d1d9e6]/50">
-                  <input type="text" id="mocked-uuid" placeholder="Cole o UUID aqui para testar..." className="w-full bg-[#ecf0f3] shadow-[inset_4px_4px_8px_#d1d9e6] text-[#003da5] font-medium rounded-xl px-4 py-4 text-xs mb-5 border-none focus:outline-none focus:ring-0 placeholder-gray-400" />
-                  <button 
-                    onClick={() => {
-                      const val = (document.getElementById('mocked-uuid') as HTMLInputElement).value;
-                      if(val) handleScanSuccess(val);
-                    }}
-                    className="w-full bg-[#003da5] text-white font-bold py-4 rounded-xl shadow-[5px_5px_10px_#d1d9e6] active:shadow-[inset_4px_4px_8px_#002b74,inset_-4px_-4px_8px_#004fd6] transition-all uppercase tracking-wider text-xs flex items-center justify-center gap-2 shimmer-btn shimmer-btn-dark"
-                  >
-                    <ScanLine className="w-4 h-4" />
-                    Simular Leitura (UUID)
-                  </button>
-               </div>
 
-               <button 
-                 onClick={resetApp} 
+               <button
+                 onClick={resetApp}
                  className="text-gray-500 bg-[#ecf0f3] shadow-[5px_5px_10px_#d1d9e6] active:shadow-[inset_3px_3px_6px_#d1d9e6] rounded-xl font-bold py-4 uppercase text-xs tracking-wider w-full transition-all"
                >
                  Cancelar
