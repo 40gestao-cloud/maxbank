@@ -24,13 +24,18 @@ export const branches: BranchConfig[] = [
     anonKeyEnvKey: 'VITE_SUPABASE_KEY_2',
   },
   {
-    id: '3',
-    name: 'LogMax Aprendiz',
-    urlEnvKey: 'VITE_SUPABASE_URL_3',
-    anonKeyEnvKey: 'VITE_SUPABASE_KEY_3',
-  },
-];
-
+      id: '3',
+      name: 'LogMax Aprendiz',
+      urlEnvKey: 'VITE_SUPABASE_URL_3',
+      anonKeyEnvKey: 'VITE_SUPABASE_KEY_3',
+    },
+    {
+      id: '4',
+      name: 'LogMax ADM',
+      urlEnvKey: 'VITE_SUPABASE_URL_4',
+      anonKeyEnvKey: 'VITE_SUPABASE_KEY_4',
+    },
+  ];
 export const getSupabaseClient = (branchId: string): SupabaseClient | null => {
   if (clients[branchId]) {
     return clients[branchId];
