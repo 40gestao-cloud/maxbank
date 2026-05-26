@@ -2,9 +2,10 @@
 
 Simulador centralizado de pagamento PIX (PWA) com leitura de QR Code. Conecta-se a três instâncias Supabase distintas, uma para cada projeto LogMax:
 
-- **LogMax ERP**
-- **LogMax Contabilidade**
-- **LogMax Aprendiz**
+ - **LogMax ERP**
+  - **LogMax Contabilidade**
+  - **LogMax Aprendiz**
+  - **LogMax ADM**
 
 ## Stack
 
